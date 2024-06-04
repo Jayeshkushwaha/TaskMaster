@@ -1,97 +1,141 @@
-// App.js
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
-import { createTable, getItems, addItem, deleteItem, updateItem } from './database';
+import React, { useState } from 'react';
+import { View, Text, Button, FlatList, TextInput, StyleSheet } from 'react-native';
+import axios from 'axios';
 
-const App = () => {
-  const [name, setName] = useState('');
-  const [items, setItems] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+const AxiosExample = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
 
-  useEffect(() => {
-    createTable();
-    getItems(setItems);
-  }, []);
-
-  const handleAddOrUpdateItem = () => {
-    if (name.length > 0) {
-      if (editingId === null) {
-        addItem(name, () => getItems(setItems));
-      } else {
-        updateItem(editingId, name, () => getItems(setItems));
-        setEditingId(null);
-      }
-      setName('');
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
+      setData(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditItem = (item) => {
-    setName(item.name);
-    setEditingId(item.id);
+  const postData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post('https://jsonplaceholder.typicode.com/posts', {
+        title,
+        body,
+        userId: 1,
+      });
+      setData((prevData) => [...prevData, response.data]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteItem = (id) => {
-    deleteItem(id, () => {
-      getItems(setItems);
-      setName('');
-      setEditingId(null);
-    });
+  const updateData = async (id: any) => {
+    setLoading(true);
+    try {
+      const response = await axios.put(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+        title: 'Updated Title',
+        body: 'Updated Body',
+        userId: 1,
+      });
+      setData((prevData) => prevData.map((item) => (item.id === id ? response.data : item)));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.item}>
-      <Text>{item.name}</Text>
-      <View style={styles.buttons}>
-        <Button title="Edit" onPress={() => handleEditItem(item)} />
-        <Button title="Delete" onPress={() => handleDeleteItem(item.id)} />
-      </View>
-    </View>
-  );
+  const patchData = async (id) => {
+    setLoading(true);
+    try {
+      const response = await axios.patch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+        title: 'Patched Title',
+      });
+      setData((prevData) => prevData.map((item) => (item.id === id ? response.data : item)));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteData = async (id) => {
+    setLoading(true);
+    try {
+      await axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`);
+      setData((prevData) => prevData.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <Button title="Fetch Data" onPress={fetchData} />
       <TextInput
-        placeholder="Enter item name"
-        value={name}
-        onChangeText={setName}
         style={styles.input}
+        placeholder="Title"
+        value={title}
+        onChangeText={setTitle}
       />
-      <Button
-        title={editingId === null ? "Add Item" : "Update Item"}
-        onPress={handleAddOrUpdateItem}
+      <TextInput
+        style={styles.input}
+        placeholder="Body"
+        value={body}
+        onChangeText={setBody}
       />
+      <Button title="Post Data" onPress={postData} />
+      <Button title="Clear Data" onPress={()=>setData([])} />
+      {loading ? <Text>Loading...</Text> : null}
       <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
+        data={data}
+        keyExtractor={(item) => item?.id?.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.item}>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text>{item.body}</Text>
+            <Button title="Update" onPress={() => updateData(item.id)} />
+            <Button title="Patch" onPress={() => patchData(item.id)} />
+            <Button title="Delete" onPress={() => deleteData(item.id)} />
+          </View>
+        )}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingTop: 60,
+    paddingHorizontal: 16,
   },
   input: {
+    height: 40,
+    borderColor: 'gray',
     borderWidth: 1,
-    borderColor: '#000',
-    padding: 10,
-    marginBottom: 10,
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
   item: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    backgroundColor: '#f9c2ff',
+    padding: 20,
+    marginVertical: 8,
+    borderRadius: 5,
   },
-  buttons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 100,
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
-export default App;
+export default AxiosExample;
