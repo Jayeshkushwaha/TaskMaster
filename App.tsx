@@ -1,37 +1,17 @@
-import React, { useEffect } from 'react';
+// App.js
+import 'react-native-gesture-handler';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import LoginScreen from './screens/LoginScreen';
-import { createTables } from './database';
-import SignUpScreen from './screens/SignUpScreen';
-import DashboardScreen from './screens/DashboardScreen';
-import AddInvestmentScreen from './screens/AddInvestmentScreen';
+import HomeScreen from './screens/HomeScreen';
 
 const Stack = createStackNavigator();
 
 const App = () => {
-  useEffect(() => {
-    createTables();
-  }, []);
-
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }} // Hide header for Login screen
-        />
-        <Stack.Screen
-          name="SignUp"
-          component={SignUpScreen}
-          options={{ headerShown: false }} // Hide header for SignUp screen
-        />
-        <Stack.Screen
-          name="Dashboard"
-          component={DashboardScreen}
-          options={{ headerShown: false }} // Hide header for Dashboard screen
-        />
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
